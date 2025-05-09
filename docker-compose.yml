@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver_persona
+    environment:
+      SA_PASSWORD: "Password123!"
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - persona-network
+    restart: always
+
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: persona_api
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=persona_db;User Id=sa;Password=Password123!;TrustServerCertificate=true;
+    depends_on:
+      - sqlserver
+    networks:
+      - persona-network
+
+volumes:
+  sqlserver_data:
+
+networks:
+  persona-network:
+    driver: bridge
